@@ -1,0 +1,53 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1
+      author: your_username
+
+      changes:
+        - createTable:
+            tableName: locations
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+
+              - column:
+                  name: name
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: address
+                  type: varchar(500)
+
+              - column:
+                  name: capacity
+                  type: integer
+
+        - insert:
+            tableName: locations
+            columns:
+              - column:
+                  name: name
+                  value: default-name
+
+              - column:
+                  name: address
+                  value: new_test_address
+
+              - column:
+                  name: capacity
+                  valueNumeric: 5000
+
+      rollback:
+        - delete:
+            tableName: locations
+            where: name='default-name'
+
+        - dropTable:
+            tableName: locations
