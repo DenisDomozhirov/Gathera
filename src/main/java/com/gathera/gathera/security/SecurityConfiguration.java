@@ -1,7 +1,6 @@
 package com.gathera.gathera.security;
 
 import com.gathera.gathera.security.jwt.JwtTokenFilter;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -21,17 +20,24 @@ import org.springframework.security.web.authentication.AnonymousAuthenticationFi
 @EnableMethodSecurity
 public class SecurityConfiguration {
 
-    @Autowired
-    private CustomUserDetailsService customUserDetailService;
+    private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
 
-    @Autowired
-    private JwtTokenFilter jwtTokenFilter;
+    private final CustomUserDetailsService customUserDetailService;
 
-    @Autowired
-    private CustomAccessDeniedHandler customAccessDeniedHandler;
+    private final JwtTokenFilter jwtTokenFilter;
 
-    @Autowired
-    private CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
+    private final CustomAccessDeniedHandler customAccessDeniedHandler;
+
+    public SecurityConfiguration(CustomAuthenticationEntryPoint customAuthenticationEntryPoint,
+                                 CustomUserDetailsService customUserDetailsService,
+                                 JwtTokenFilter jwtTokenFilter,
+                                 CustomAccessDeniedHandler customAccessDeniedHandler) {
+        this.customAuthenticationEntryPoint = customAuthenticationEntryPoint;
+        this.customUserDetailService = customUserDetailsService;
+        this.jwtTokenFilter = jwtTokenFilter;
+        this.customAccessDeniedHandler = customAccessDeniedHandler;
+    }
+
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -58,6 +64,18 @@ public class SecurityConfiguration {
                                 .permitAll()
                                 .requestMatchers(HttpMethod.POST, "/users/auth")
                                 .permitAll()
+                                .requestMatchers(HttpMethod.POST, "/events")
+                                .hasAnyAuthority("USER", "ADMIN")
+                                .requestMatchers(HttpMethod.GET, "/events/{eventId}")
+                                .hasAnyAuthority("USER", "ADMIN")
+                                .requestMatchers(HttpMethod.GET, "/events/my")
+                                .hasAnyAuthority("USER")
+                                .requestMatchers(HttpMethod.PUT, "/events/{eventId}")
+                                .hasAnyAuthority("USER", "ADMIN")
+                                .requestMatchers(HttpMethod.DELETE, "/events/{eventId}")
+                                .hasAnyAuthority("USER", "ADMIN")
+                                .requestMatchers("/events/registrations/**")
+                                .hasAnyAuthority("USER")
                                 .anyRequest().authenticated())
                 .exceptionHandling(exception ->
                         exception.authenticationEntryPoint(customAuthenticationEntryPoint)

@@ -3,3 +3,7 @@ databaseChangeLog:
       file: db/changelog/changesets/0001-starter-db.yaml
   - include:
       file: db/changelog/changesets/0002-users-db.yaml
+  - include:
+      file: db/changelog/changesets/0003-events-db.yaml
+  - include:
+      file: db/changelog/changesets/0004-registrations-db.yaml
