@@ -87,4 +87,16 @@ public class EventsController {
                 .status(HttpStatus.NO_CONTENT)
                 .build();
     }
+
+    @PostMapping("/search")
+    public List<EventDto> searchEvents(
+            @RequestBody EventSearchRequestDto request
+    ){
+        log.info("Post request for search events with filter={}", request);
+
+        return eventService.search(request)
+                .stream()
+                .map(eventConverter::toDto)
+                .toList();
+    }
 }

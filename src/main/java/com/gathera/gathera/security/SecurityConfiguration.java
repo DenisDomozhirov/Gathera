@@ -76,6 +76,8 @@ public class SecurityConfiguration {
                                 .hasAnyAuthority("USER", "ADMIN")
                                 .requestMatchers("/events/registrations/**")
                                 .hasAnyAuthority("USER")
+                                .requestMatchers(HttpMethod.DELETE, "/events/search")
+                                .hasAnyAuthority("USER", "ADMIN")
                                 .anyRequest().authenticated())
                 .exceptionHandling(exception ->
                         exception.authenticationEntryPoint(customAuthenticationEntryPoint)

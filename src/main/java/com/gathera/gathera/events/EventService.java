@@ -6,6 +6,7 @@ import com.gathera.gathera.Users.User;
 import com.gathera.gathera.Users.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -126,6 +127,16 @@ public class EventService {
 
         entity.setStatus(EventStatus.CANCELLED);
         eventRepository.save(entity);
+    }
+
+    public List<Event> search(
+            EventSearchRequestDto filter
+    ){
+        Specification<EventsEntity> spec = EventSpecifications.buildFrom(filter);
+        return eventRepository.findAll(spec)
+                .stream()
+                .map(eventConverter::toDomain)
+                .toList();
     }
 
 }
