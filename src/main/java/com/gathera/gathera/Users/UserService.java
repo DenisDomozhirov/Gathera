@@ -1,11 +1,8 @@
 package com.gathera.gathera.Users;
 
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.validation.Valid;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
-import java.util.Scanner;
 
 @Service
 public class UserService {
@@ -26,7 +23,6 @@ public class UserService {
         }
 
         var hashedPass = passwordEncoder.encode(signUpRequest.password());
-
 
         var userToSave = new UserEntity(
                 null,

@@ -9,6 +9,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
+import java.nio.file.AccessDeniedException;
 import java.time.LocalDateTime;
 import java.util.stream.Collectors;
 
@@ -68,6 +69,23 @@ public class GlobalExceptionHandler {
         );
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
+                .body(serverError);
+    }
+
+    @ExceptionHandler(
+            AccessDeniedException.class
+    )
+    public ResponseEntity<ServerDto> handleAccessDeniedException(
+            AccessDeniedException e
+    ){
+        log.error("Access denied, error", e);
+        var serverError = new ServerDto(
+                "Insufficient privileges to perform the operation.",
+                e.getMessage(),
+                LocalDateTime.now()
+        );
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
                 .body(serverError);
     }
 
