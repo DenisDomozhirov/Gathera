@@ -4,6 +4,7 @@ import com.gathera.gathera.Locations.LocationRepository;
 import com.gathera.gathera.Locations.LocationsEntity;
 import com.gathera.gathera.Users.User;
 import com.gathera.gathera.Users.UserRepository;
+import com.gathera.gathera.kafka.EventKafkaSender;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import org.springframework.data.jpa.domain.Specification;
@@ -20,18 +21,21 @@ public class EventService {
     private final UserRepository userRepository;
     private final EventConverter eventConverter;
     private final EventPermissionService eventPermissionService;
+    private final EventKafkaSender eventKafkaSender;
 
 
     public EventService(EventRepository eventRepository,
                         LocationRepository locationRepository,
                         UserRepository userRepository,
                         EventConverter eventConverter,
-                        EventPermissionService eventPermissionService) {
+                        EventPermissionService eventPermissionService,
+                        EventKafkaSender eventKafkaSender) {
         this.eventRepository = eventRepository;
         this.locationRepository = locationRepository;
         this.userRepository = userRepository;
         this.eventConverter = eventConverter;
         this.eventPermissionService = eventPermissionService;
+        this.eventKafkaSender = eventKafkaSender;
     }
 
     @Transactional
@@ -103,13 +107,17 @@ public class EventService {
 
         if(effectiveMaxPlaces < entity.getOccupiedPlaces()){
             throw new IllegalArgumentException(
-                    "maxPlaces connot be less than already occupied places (%d)".formatted(entity.getOccupiedPlaces())
+                    "maxPlaces cannot be less than already occupied places (%d)".formatted(entity.getOccupiedPlaces())
             );
         }
 
+        var before = eventConverter.toDomain(entity);
+
         eventConverter.applyUpdate(dto, entity, newLocation);
         var saved = eventRepository.save(entity);
-        return eventConverter.toDomain(saved);
+        var after = eventConverter.toDomain(saved);
+        eventKafkaSender.publishUpdate(before, after, currentUser.id());
+        return after;
     }
 
     @Transactional

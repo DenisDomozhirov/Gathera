@@ -1,0 +1,7 @@
+databaseChangeLog:
+  - include:
+      file: changesets/0001-create-notification-event-payloads.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: changesets/0002-notification.yaml
+      relativeToChangelogFile: true

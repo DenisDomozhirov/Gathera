@@ -24,10 +24,11 @@ public class JwtTokenManager {
     }
 
     // подумать над дополнением данных, которые заполняются по пользователю
-    public String generateJwtToken(String login){
+    public String generateJwtToken(String login, Long userId){
         return Jwts
                 .builder()
                 .subject(login)
+                .claim("userId", userId)
                 .signWith(key)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + exp_time))

@@ -1,0 +1,119 @@
+package com.gathera.notificator.errors;
+
+import jakarta.persistence.EntityNotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+
+import java.nio.file.AccessDeniedException;
+import java.time.LocalDateTime;
+import java.util.stream.Collectors;
+
+@ControllerAdvice
+public class GlobalExceptionHandler {
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
+    @ExceptionHandler({
+            MethodArgumentNotValidException.class,
+            IllegalArgumentException.class
+    })
+    public ResponseEntity<ErrorMessageResponse> handleValidationException(
+            Exception e
+    ){
+        log.error("Get validation exception", e);
+
+        String defaultMessage = e instanceof MethodArgumentNotValidException ?
+                constructMethodArgumentNotValidException((MethodArgumentNotValidException) e) : e.getMessage();
+
+        var errorMessage = new ErrorMessageResponse(
+                "Ошибка при валидации запроса",
+                defaultMessage,
+                LocalDateTime.now()
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(errorMessage);
+    }
+
+    @ExceptionHandler
+    public ResponseEntity<ErrorMessageResponse> handleBadBody(
+            HttpMessageNotReadableException e
+    ){
+        log.error("bad request body", e);
+        var serverError = new ErrorMessageResponse(
+                "bad request body",
+                e.getMessage(),
+                LocalDateTime.now()
+        );
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(serverError);
+    }
+
+    @ExceptionHandler
+    public ResponseEntity<ErrorMessageResponse> handleNotFoundException(
+            Exception e
+    ){
+        log.error("Server error", e);
+        var serverError = new ErrorMessageResponse(
+                "Server error",
+                e.getMessage(),
+                LocalDateTime.now()
+        );
+        return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(serverError);
+    }
+
+    @ExceptionHandler(
+            EntityNotFoundException.class
+    )
+    public ResponseEntity<ErrorMessageResponse> handleGenericException(
+            EntityNotFoundException e
+    ){
+        log.error("Entity not found, server error", e);
+        var serverError = new ErrorMessageResponse(
+                "Server error",
+                e.getMessage(),
+                LocalDateTime.now()
+        );
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(serverError);
+    }
+
+    @ExceptionHandler(
+            AccessDeniedException.class
+    )
+    public ResponseEntity<ErrorMessageResponse> handleAccessDeniedException(
+            AccessDeniedException e
+    ){
+        log.error("Access denied, error", e);
+        var serverError = new ErrorMessageResponse(
+                "Insufficient privileges to perform the operation.",
+                e.getMessage(),
+                LocalDateTime.now()
+        );
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body(serverError);
+    }
+
+
+    private static String constructMethodArgumentNotValidException(
+            MethodArgumentNotValidException e
+    ){
+        return e.getBindingResult()
+                .getFieldErrors()
+                .stream()
+                .map(error -> error.getField() + " " + error.getDefaultMessage())
+                .collect(Collectors.joining(", "));
+    }
+
+}
